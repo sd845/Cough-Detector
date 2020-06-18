@@ -104,6 +104,11 @@ def index():
     # Main page
     return render_template('index1.html')
 
+@app.route('/ping', methods=['POST'])
+
+def pingu():
+    return jsonify({"Hello":"123"})
+
 
 @app.route('/index1', methods=['POST'])
 
