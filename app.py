@@ -52,7 +52,7 @@ print('Model loaded. Check http://127.0.0.1:5000/')
 
 def extract_features(file_name):
     
-    audio, sample_rate = librosa.load(file_name, res_type='kaiser_fast') 
+    audio, sample_rate = librosa.load(file_name) 
     print("Audio File Loaded")
     mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
     mfccs = mfccs[:40,:216]
