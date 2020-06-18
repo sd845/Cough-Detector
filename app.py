@@ -34,7 +34,7 @@ app = Flask(__name__)
 count = "0"
 
 # load json and create model
-json_file = open(os.path.join(os.getcwd(),"model_6b\model_6b.json"), 'r')
+json_file = open(os.path.join(os.getcwd(),r"model_6b\model_6b.json"), 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
