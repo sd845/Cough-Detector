@@ -8,6 +8,7 @@ import numpy as np
 import librosa.display
 import librosa
 import base64
+from pathlib import Path
 #from keras.models import model_from_json
 from tensorflow.keras.models import model_from_json
 
@@ -34,12 +35,16 @@ app = Flask(__name__)
 count = "0"
 
 # load json and create model
-json_file = open(os.path.join(os.getcwd(),r"model_6b\model_6b.json"), 'r')
+modelfolder = Path(os.path.join(os.getcwd(),"model_6b"))
+modelfjson = modelfolder/"model_6b.json"
+#json_file = open(os.path.join(os.getcwd(),r"model_6b\model_6b.json"), 'r')
+json_file = open(modelfjson, 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
-loaded_model.load_weights(r".\model_6b\model_6b.h5")
+
+loaded_model.load_weights(os.path.join(modelfolder,"model_6b.h5"))
 print("Loaded model from disk")
 
 print('Model loaded. Check http://127.0.0.1:5000/')
@@ -119,9 +124,9 @@ def api_message():
             pass
         
         count = str(int(count)+1)
-
-        fname = "audios"+"\\" + filename
-        filepath = os.path.abspath(fname)
+        audiofolder = os.path.join(os.getcwd(),"audios")
+        #fname = "audios"+"\\" + filename
+        filepath = os.path.join(audiofolder,filename)
         #print("Check for this:",filepath)
         #print(os.path.isfile(filepath))
 
@@ -150,6 +155,6 @@ def api_message():
 if __name__ == '__main__':
     
     
-    app.run(debug=True)
+    app.run(debug=True, port = 5000)
     
 
