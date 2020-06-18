@@ -114,7 +114,7 @@ def pingu():
 
 def api_message():
     global count
-    filename = count + ".ogg"
+    filename = count + ".wav"
     if request.method == "POST":
         content = request.json
         
