@@ -79,8 +79,8 @@ navigator.mediaDevices.getUserMedia({audio:true})
                   
                 });
               var result = await response.json();
-              console.log(result)
-              console.log(result.probability)
+              //console.log(result)
+              //console.log(result.probability)
               var pred = document.getElementById("prediction");
               var element = document.getElementById("container1");
               
