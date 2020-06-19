@@ -79,8 +79,8 @@ navigator.mediaDevices.getUserMedia({audio:true})
                   
                 });
               var result = await response.json();
-              //console.log(result)
-              //console.log(result.probability)
+              console.log(result)
+              console.log(result.probability)
               var pred = document.getElementById("prediction");
               var element = document.getElementById("container1");
               
@@ -88,6 +88,7 @@ navigator.mediaDevices.getUserMedia({audio:true})
               // Add an event listener
               pred.addEventListener("Trigger", function(e) {
                 console.log(e.detail.message); // Prints "Example of an event"
+                pred.innerHTML =" ";
                 element.style.display ="block";
 
               });
@@ -97,11 +98,11 @@ navigator.mediaDevices.getUserMedia({audio:true})
                 message : "You Coughed!",
                 } });
               
-              if (result.label === "coughing"){
+              if ((result.label === "coughing") && (parseFloat(result.probability) >= 0.75)){
                 pred.dispatchEvent(event);
               }
               else{
-                               
+                pred.innerHTML ="Detecting...";               
                 element.style.display = "none";
               }
             }

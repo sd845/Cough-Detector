@@ -35,8 +35,8 @@ app = Flask(__name__)
 count = "0"
 
 # load json and create model
-modelfolder = Path(os.path.join(os.getcwd(),"model_6b"))
-modelfjson = modelfolder/"model_6b.json"
+modelfolder = Path(os.path.join(os.getcwd(),"model_6"))
+modelfjson = modelfolder/"model_6.json"
 
 json_file = open(modelfjson, 'r')
 loaded_model_json = json_file.read()
@@ -44,7 +44,7 @@ json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
 
-loaded_model.load_weights(os.path.join(modelfolder,"model_6b.h5"))
+loaded_model.load_weights(os.path.join(modelfolder,"model_6.h5"))
 print("Loaded model from disk")
 
 print('Model loaded. Check http://127.0.0.1:5000/')
