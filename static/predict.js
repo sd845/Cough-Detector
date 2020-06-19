@@ -24,7 +24,6 @@ navigator.mediaDevices.getUserMedia({audio:true})
                        
             }
             
-
             //Task when audio is stopped
             rec.onstop = e =>{
               //Print length of buffer
@@ -53,12 +52,10 @@ navigator.mediaDevices.getUserMedia({audio:true})
             
            }
                  
-           
-           
+                      
           //POST data out      
           async function sendData(data) {
-            //console.log("Inside sendData")
-            //console.log(data instanceof Blob)
+            
              console.log(data)
              //Upload the blob to a file reader
              var reader = new FileReader();
@@ -79,7 +76,7 @@ navigator.mediaDevices.getUserMedia({audio:true})
                 
                           },
                 body: JSON.stringify({message:base64data})
-                  //body: JSON.stringify({message:"Hi there!"})
+                  
                 });
               var result = await response.json();
               //console.log(result)
@@ -90,7 +87,7 @@ navigator.mediaDevices.getUserMedia({audio:true})
 
               // Add an event listener
               pred.addEventListener("Trigger", function(e) {
-                //console.log(e.detail); // Prints "Example of an event"
+                console.log(e.detail.message); // Prints "Example of an event"
                 element.style.display ="block";
 
               });
@@ -100,7 +97,7 @@ navigator.mediaDevices.getUserMedia({audio:true})
                 message : "You Coughed!",
                 } });
               
-              if (result.label === "coughing" && parseFloat(result.probability) >= 0.90){
+              if (result.label === "coughing"){
                 pred.dispatchEvent(event);
               }
               else{

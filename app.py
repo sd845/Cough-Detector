@@ -37,7 +37,7 @@ count = "0"
 # load json and create model
 modelfolder = Path(os.path.join(os.getcwd(),"model_6b"))
 modelfjson = modelfolder/"model_6b.json"
-#json_file = open(os.path.join(os.getcwd(),r"model_6b\model_6b.json"), 'r')
+
 json_file = open(modelfjson, 'r')
 loaded_model_json = json_file.read()
 json_file.close()
@@ -104,10 +104,10 @@ def index():
     # Main page
     return render_template('index1.html')
 
-@app.route('/ping', methods=['POST'])
+"""@app.route('/ping', methods=['POST'])
 
 def pingu():
-    return jsonify({"Hello":"123"})
+    return jsonify({"Hello":"123"})"""
 
 
 @app.route('/index1', methods=['POST'])
@@ -130,10 +130,10 @@ def api_message():
         
         count = str(int(count)+1)
         audiofolder = os.path.join(os.getcwd(),"audios")
-        #fname = "audios"+"\\" + filename
+        
         filepath = os.path.join(audiofolder,filename)
-        #print("Check for this:",filepath)
-        #print(os.path.isfile(filepath))
+        
+        #print(filepath)
 
         if int(count) > 10:
             count = "0"
@@ -142,9 +142,6 @@ def api_message():
             print(filepath)
             lname,lprob = print_prediction(loaded_model,filepath)
             
-            #print("The predicted class number is:", v[0], '\n')
-            #labelid = np.int16(v[0]).item()
-            #labelname = getLabel(labelid) 
             print("Label predicted: ",lname," Probability: ",lprob)
             os.remove(filepath)
             return jsonify({"label":lname,"probability":str(lprob)})
