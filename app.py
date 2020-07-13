@@ -2,8 +2,6 @@ from __future__ import division, print_function
 # coding=utf-8
 import sys
 import os
-import glob
-import re
 import numpy as np
 import librosa.display
 import librosa
@@ -11,8 +9,9 @@ import base64
 from pathlib import Path
 #from keras.models import model_from_json
 from tensorflow.keras.models import model_from_json
-
-
+from face_mask import init_face_mask,check_mask
+import matplotlib
+from PIL import Image
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -35,8 +34,8 @@ app = Flask(__name__)
 count = "0"
 
 # load json and create model
-modelfolder = Path(os.path.join(os.getcwd(),"model_6"))
-modelfjson = modelfolder/"model_6.json"
+modelfolder = Path(os.path.join(os.getcwd(),"model_6b"))
+modelfjson = modelfolder/"model_6b.json"
 
 json_file = open(modelfjson, 'r')
 loaded_model_json = json_file.read()
@@ -44,11 +43,12 @@ json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
 
-loaded_model.load_weights(os.path.join(modelfolder,"model_6.h5"))
+loaded_model.load_weights(os.path.join(modelfolder,"model_6b.h5"))
 print("Loaded model from disk")
 
 print('Model loaded. Check http://127.0.0.1:5000/')
-
+ 
+faceNet,maskNet = init_face_mask()
 
 def extract_features(file_name):
     
@@ -114,7 +114,8 @@ def pingu():
 
 def api_message():
     global count
-    filename = count + ".wav"
+    filename = count + ".webm"
+    imagename = count + ".jpeg"
     if request.method == "POST":
         content = request.json
         
@@ -129,10 +130,12 @@ def api_message():
             pass
         
         count = str(int(count)+1)
+        
         audiofolder = os.path.join(os.getcwd(),"audios")
-        
+        imagefolder = os.path.join(os.getcwd(),"static")
+        imagefolder = os.path.join(imagefolder,"img")
         filepath = os.path.join(audiofolder,filename)
-        
+        imagepath = os.path.join(imagefolder,imagename)
         #print(filepath)
 
         if int(count) > 10:
@@ -141,15 +144,27 @@ def api_message():
         if (os.path.isfile(filepath)):
             print(filepath)
             lname,lprob = print_prediction(loaded_model,filepath)
-            
+            frame = check_mask(lname,filepath,faceNet,maskNet,imagepath)
+            #matplotlib.image.imsave(imagepath, frame)
+
+            #im = Image.fromarray(frame)
+            #imdata = base64.b64encode(im.read())
+            #im.save(imagepath)
+            print("Image saved at: ",imagepath)
             print("Label predicted: ",lname," Probability: ",lprob)
-            os.remove(filepath)
-            return jsonify({"label":lname,"probability":str(lprob)})
+            #os.remove(filepath)
+            imagefile = "img/"+imagename
+            return jsonify({
+                "label":lname,
+                "probability":str(lprob),
+                "imagedata": url_for('static',filename = imagefile)
+                })
+            #return jsonify({"label":lname,"probability":str(lprob)})
             
         else:
             print("filepath ERROR")
 
-          
+        
         return jsonify({"label":"Message received"})
     
 
