@@ -139,7 +139,7 @@ def check_mask(lname,filepath,faceNet,maskNet,imagepath):
 	# show the output frame
 	
 	cv2.imshow("Frame", frame)
-	key = cv2.waitKey(10000) & 0xFF
+	key = cv2.waitKey(1) & 0xFF
 	count = count + 1
 	cv2.imwrite(imagepath,frame)
 	return frame
