@@ -1,5 +1,5 @@
 # Importing major libraries
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, url_for,request
 from flask_socketio  import SocketIO
 import base64
 import os
@@ -16,6 +16,10 @@ import logging
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+
+#Hide warnings
+import warnings
+warnings.filterwarnings("ignore")
 
 #Threading fundamentals
 async_mode = None
@@ -61,7 +65,8 @@ def index():
 # Return message on successful connection
 @socket.on('connect')
 def connection():
-    print ("Connected")
+    currentSocketId = request.sid
+    print ("Connected with: ",currentSocketId)
     socket.emit('message', 'connected established')
 
 
@@ -69,38 +74,42 @@ def connection():
 @socket.on('blob event')
 def handle_blob(message):
     global count
+    currentSocketId = request.sid
     print('Got message from frontend :',message[:10])
+    print("socket id: ",currentSocketId)
 
     #Declaring filename and videoname
     filename = "video" + count + ".webm"
     videoname = "vid" + count + ".avi"
     folder = os.path.join(os.getcwd(),"static")
-    filepath = os.path.join(folder,filename)
-    videopath = os.path.join(folder,videoname)
+    dirpath = os.path.join(folder,currentSocketId)
+    if not os.path.isdir(dirpath):
+        os.mkdir(dirpath)
+    filepath = os.path.join(dirpath,filename)
+    videopath = os.path.join(dirpath,videoname)
 
     #decode the message
     bstring = message
     data = base64.b64decode(bstring)
 
     #write the videofile to disk
-    f = open('./static/'+filename, 'wb')
+    f = open(filepath, 'wb')
     f.write(data)
     f.close()
 
     #Updating information
-    lname = "coughing"
+
     count = str(int(count)+1)
     print ("Processing now: ", videopath)
 
     #function for audio and video processing
-    frames = check_mask(filepath,cough_model,faceNet,maskNet,videopath)
-
+    frames = check_mask(filepath,dirpath,cough_model,faceNet,maskNet,videopath)
+    os.remove(filepath)
     #print ("Sending rm3 now ");
-    socket.emit("rmessage3",{"message":url_for('static',filename = videoname)})
+    socket.emit("rmessage3",{"message":url_for('static',filename = currentSocketId+"/"+videoname)})
     print("sent video for: ",filename)
 
 
 if __name__ == '__main__':
-
-    socket.run(app, port = 9000)
     print ("socket listening on 9000")
+    socket.run(app, port = 9000)

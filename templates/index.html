@@ -46,72 +46,13 @@
     outvid.src = msg["message"]
   });
 
-</script>
-<!--
-<body>
-  <h2>SocketIO APP</h2>
-  <h2>Record</h2>
-        <p>
-          <button id=record></button>
-          <button id=stopRecord disabled>Stop</button>
-        </p>
-        <p>
-          <video id=recordedAudio></video>
-          <img id=frames></img>
+  socket.on('response_back', function(image){
+      const image_id = document.getElementById('image');
+      image_id.src = image;
+  });
 
-        </p>
-</body>
-<style>
-#record {
-    background-color: red; /* Green */
-    border-width: medium;
-    border-color: black;
-    color: white;
-    padding: 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    cursor: pointer;
-    max-width: 50%;
-    max-height: 15%;
-    border-radius: 50%;
-    left: 100px;
-    right: 100px;
-    position: relative;
-}
-#stopRecord {
-  background-color: green; /* Green */
-  border-width: medium;
-  border-color: black;
-  color: white;
-  padding: 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
-  max-width: 50%;
-  max-height: 15%;
-  border-radius: 50%;
-  left: 100px;
-  right: 100px;
-  position: relative;
-}
-h2 {
-    left: 100px;
-    position: relative;
-}
-#recordedAudio {
-  left: 100px;
-  right: 100px;
-  position: relative;
-}
-</style>
-</html>
--->
+</script>
+
 <body id="page-top">
         <!-- Navigation-->
         <nav class="navbar navbar-expand-lg navbar-light fixed-top py-3" id="mainNav">
@@ -144,7 +85,7 @@ h2 {
         </header>
         <!-- Predictor-->
         <section class="page-section bg-primary" style = "background-color: #f4623a" id="about">
-            <div class="container h-100">
+            <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-lg-8 text-center">
                         <h2 class="text-white mt-0">May the odds be in your favour!</h2>
@@ -185,6 +126,7 @@ h2 {
                     <!--<video id="recorded" playsinline loop></video> -->
                     <video id = "outvid" playsinline autoplay muted></video>
                     <br>
+                    <img id="image">
                     <br>
                     <a id=stopRecord disabled class="btn btn-light btn-xl js-scroll-trigger mt-0" href="#services">Stop!</a>
                     <br>

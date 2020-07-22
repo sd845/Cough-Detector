@@ -10,7 +10,7 @@ navigator.mediaDevices.getUserMedia({audio:true,video: true})
             //Stores the stream
             window.rec = new MediaRecorder(stream);
             // Task when recording starts
-            const gumVideo = document.querySelector('video#gum');
+            var gumVideo = document.querySelector('video#gum');
             gumVideo.srcObject = stream;
             gumVideo.style.display = "none";
             rec.onstart = e =>{
@@ -66,7 +66,7 @@ navigator.mediaDevices.getUserMedia({audio:true,video: true})
              reader.readAsDataURL(data);
              //Converting it to a base64 string.
              reader.onload = function() {
-               console.log("reader onload ");
+               // console.log("reader onload ");
                   base64data = reader.result.split(',')[1];
                   //console.log(base64data);
                   socket.emit("blob event",base64data)
