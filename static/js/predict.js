@@ -69,7 +69,7 @@ navigator.mediaDevices.getUserMedia({audio:true,video: true})
                // console.log("reader onload ");
                   base64data = reader.result.split(',')[1];
                   //console.log(base64data);
-                  socket.emit("blob event",base64data)
+                  socket.emit("blob_event",base64data)
 
              }
 

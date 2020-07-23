@@ -7,6 +7,7 @@ import time
 import cv2
 import os
 import librosa
+from flask import url_for
 
 def detect_and_predict_mask(frame, faceNet, maskNet):
 	# grab the dimensions of the frame and then construct a blob from it
@@ -95,7 +96,7 @@ def init_face_mask():
 	print("Loaded maskNet model")
 	return model,faceNet,maskNet
 
-def check_mask(filepath,dirpath,cough_model,faceNet,maskNet,videopath):
+def check_mask(socket,filepath,dirpath,cough_model,faceNet,maskNet,videopath):
 
 	lname,lprob = print_prediction(cough_model,filepath)
 	print("Predicted class:",lname)
@@ -108,11 +109,20 @@ def check_mask(filepath,dirpath,cough_model,faceNet,maskNet,videopath):
 	allframes = []
 	allnames = []
 
+	# To save images
+	videoname = videopath.split(os.sep)[-1][:-4]
+	imagepath = os.path.join(dirpath,"images")
+	if not os.path.isdir(imagepath):
+		os.mkdir(imagepath)
+	imagepath = os.path.join(imagepath,videoname)
+	if not os.path.isdir(imagepath):
+		os.mkdir(imagepath)
+
 	vidcap = cv2.VideoCapture(filepath)
 	success,image = vidcap.read()
 	if success:
 		print("video capture successful")
-	fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+	fourcc = cv2.VideoWriter_fourcc(*'VP90')
 	video = cv2.VideoWriter(videopath, fourcc, 10.0, (400,300),True)
 	# print("video saved at: ", videopath)
 
@@ -133,7 +143,7 @@ def check_mask(filepath,dirpath,cough_model,faceNet,maskNet,videopath):
 			(mask, withoutMask) = pred
 			label = "Mask" if mask > withoutMask else "No Mask"
 
-			if mask>0.65 or withoutMask>0.65:
+			if mask>0.70 or withoutMask>0.70:
 				#sort into risk categories
 				if is_cough:
 					if label == 'Mask':
@@ -166,14 +176,13 @@ def check_mask(filepath,dirpath,cough_model,faceNet,maskNet,videopath):
 			key = cv2.waitKey(1) & 0xFF
 
 			imagename = str(count)+".jpg"
-			imagepath = os.path.join(dirpath,imagename)
+			imagesavepath = os.path.join(imagepath,imagename)
 			allnames.append(imagename)
-			cv2.imwrite(imagepath,frame)
+			cv2.imwrite(imagesavepath,frame)
 			count = count + 1
-
-		#socketio.emit("message3",url_for('static',filename = imagename))
-	# for f in allframes:
-		# print("writing frame")
+			# print("Final image path: ",imagesavepath)
+			sendimage = '/'.join(imagesavepath.split(os.sep)[-4:])
+			socket.emit("response_back",url_for('static',filename = sendimage))
 
 	video.release()
 	# do a bit of cleanup
@@ -187,7 +196,7 @@ def check_mask(filepath,dirpath,cough_model,faceNet,maskNet,videopath):
 def extract_features(file_name):
 
     audio, sample_rate = librosa.load(file_name)
-    print("Audio File Loaded")
+    # print("Audio File Loaded")
     mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
     mfccs = mfccs[:40,:216]
 
@@ -196,7 +205,7 @@ def extract_features(file_name):
 def print_prediction(model,file_name):
 
     prediction_feature = extract_features(file_name)
-    print("Features Extracted")
+    # print("Features Extracted")
     prediction_feature = librosa.util.fix_length(prediction_feature, 216)
     prediction_feature = prediction_feature.reshape(1, 40, 216, 1)
     predicted_vector = model.predict_classes(prediction_feature)
