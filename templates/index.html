@@ -21,35 +21,46 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" media="all">
    <!-- <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
     <link rel="shortcut icon" href="#"> -->
+    <style>
 
+         #videoElement {
+             width: 640px;
+             height: 480px;
+             background-color: #666;
+         }
+
+         #image{
+             width: 640px;
+             height: 480px;
+             background-color: #666;
+             display : none;
+         }
+
+         #canvasElement {
+             width: 640px;
+             height: 480px;
+             display: none;
+         }
+        </style>
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.dev.js"></script>
 <script src="{{ url_for('static',filename='js/predict.js') }}"></script>
 <script type="text/javascript" charset="utf-8">
 
-//Global variable
-  var base64data
   var socket = io("http://localhost:9000/");
+
   socket.on('connect',function(){
     console.log("connected")
   });
+
   socket.on('disconnect',function(e){
     console.log("disconnected ", e)
-    socket.emit("Cleanup")
-  });
-  socket.on('message', (msg)=> {
-    console.log("Msg is ", msg);
   });
 
-  socket.on('rmessage3', (msg)=> {
-    console.log("msg from rm3 ", msg)
-    var outvid = document.getElementById('outvid');
-    outvid.src = msg["message"]
-  });
-
-  socket.on('response_back', function(image){
-      const image_id = document.getElementById('image');
-      image_id.src = image;
+  socket.on('response_back', function(imagepath){
+      console.log(imagepath)
+      var image_id = document.getElementById('image');
+      image_id.src = imagepath
   });
 
 </script>
@@ -108,32 +119,37 @@
                 <hr class="divider my-4" />
                 <h3 id="prediction" class="text-center mt-0"></h2>
                 <div id="animation" class="col-lg-12 text-center">
-                	<div id=container1 >
-					  Alert
-					  <div id=flip>
-					    <div><div>Coughing</div></div>
-					    <div><div>Coughing</div></div>
-					    <div><div>Coughing</div></div>
-					  </div>
-					  Detected!
-					</div>
+                <div id=container1 >
+        					  Alert
+        					  <div id=flip>
+          					    <div><div>Coughing</div></div>
+          					    <div><div>Coughing</div></div>
+          					    <div><div>Coughing</div></div>
+          					  </div>
+          					  Detected!
+        					 </div>
 
-					<link href="{{ url_for('static',filename='css/2.css') }}" rel="stylesheet"/>
+        					<link href="{{ url_for('static',filename='css/2.css') }}" rel="stylesheet"/>
                 </div>
                 <br>
                 <hr class="divider my-4" />
-                <div class="col-lg-12 text-center">
-                    <video id="gum" playsinline autoplay muted></video>
-                    <!--<video id="recorded" playsinline loop></video> -->
-                    <!-- <video id = "outvid" playsinline autoplay muted></video> -->
-                    <br>
-                    <img id="image">
-                    <br>
+                <div id="col-lg-12 text-center" style="text-align:center">
+                  <div class="" style="display: flex; justify-content:center; margin: 10px 0px;">
+                    <div id="videostyle" style="margin: 0px 10px; border: solid 3px #f4623a;" >
+                      <video autoplay="true" id="videoElement" controls muted> </video>
+                    </div>
+                    <div id="videostyle" style="margin: 0px 10px; border: solid 3px #f4623a;" >
+                      <img id="image">
+                      <canvas id="canvasElement"></canvas>
+                    </div>
+                  </div>
+                  <div class="">
                     <a id=stopRecord disabled class="btn btn-light btn-xl js-scroll-trigger mt-0" href="#services">Stop!</a>
                     <br>
                     <br>
                     <p id = "stop" class="text-white-50 mb-4"></p>
                     <hr class="divider my-4" />
+                  </div>
                 </div>
             </div>
         </section>
@@ -164,7 +180,7 @@
                             <img class="img-fluid" src="{{ url_for('static',filename='assets/img/portfolio/thumbnails/4.png') }}" alt="" />
                             <div class="portfolio-box-caption">
                                 <div class="project-category text-white-50">Deployment</div>
-                                <div class="project-name">Librosa</div>
+                                <div class="project-name">Flask</div>
                             </div></a
                         >
                     </div>
@@ -182,8 +198,7 @@
                             <div class="portfolio-box-caption">
                                 <div class="project-category text-white-50">Design</div>
                                 <div class="project-name">Bootstrap 4</div>
-                            </div></a
-                        >
+                            </div></a>
                     </div>
                     <div class="col-lg-4 col-sm-6">
                         <a class="portfolio-box" href="{{ url_for('static',filename='assets/img/portfolio/fullsize/6.jpg') }}"
@@ -191,8 +206,7 @@
                             <div class="portfolio-box-caption p-3">
                                 <div class="project-category text-white-50">Deployment Server</div>
                                 <div class="project-name">Azure</div>
-                            </div></a
-                        >
+                            </div></a>
                     </div>
                 </div>
             </div>
@@ -214,8 +228,9 @@
 
                     </div>
                     <div class="col-lg-4 mr-auto text-center">
-                        <i class="fas fa-envelope fa-3x mb-3 text-muted"></i
-                        ><!-- Make sure to change the email address in BOTH the anchor text and the link target below!--><a class="d-block" href="mailto:info@b-aegis.com">info@b-aegis.com</a>
+                        <i class="fas fa-envelope fa-3x mb-3 text-muted"></i>
+                        <!-- Make sure to change the email address in BOTH the anchor text and the link target below!-->
+                        <a class="d-block" href="mailto:info@b-aegis.com">info@b-aegis.com</a>
                     </div>
                 </div>
             </div>

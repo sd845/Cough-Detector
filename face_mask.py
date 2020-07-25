@@ -3,12 +3,13 @@ from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model, model_from_json
 import numpy as np
 import imutils
-import time
 import cv2
 import os
 import librosa
-from flask import url_for
 
+##--------------------------------------------------------------------------------------------------------
+## Mask Detection functions
+##--------------------------------------------------------------------------------------------------------
 def detect_and_predict_mask(frame, faceNet, maskNet):
 	# grab the dimensions of the frame and then construct a blob from it
 	(h, w) = frame.shape[:2]
@@ -65,18 +66,10 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
 	# return a 2-tuple of the face locations and their corresponding locations
 	return (locs, preds, len(faces))
 
-def init_face_mask():
-	#load cough detector model
 
-	modelfolder = os.path.join(os.getcwd(),"model_6b")
-	modelfjson = os.path.join(modelfolder,"model_6b.json")
-	json_file = open(modelfjson, 'r')
-	loaded_model_json = json_file.read()
-	json_file.close()
-	model = model_from_json(loaded_model_json)
-	# load weights into new model
-	model.load_weights(os.path.join(modelfolder,"model_6b.h5"))
-	print("Loaded cough model from disk")
+
+def init_face_mask():
+
 
 	# load our serialized face detector model from disk
 	mypath = os.getcwd()
@@ -94,109 +87,30 @@ def init_face_mask():
 	# load weights into new model
 	maskNet.load_weights(os.path.join(mypath,"detection_model.h5"))
 	print("Loaded maskNet model")
-	return model,faceNet,maskNet
+	return faceNet,maskNet
 
-def check_mask(socket,filepath,dirpath,cough_model,faceNet,maskNet,videopath):
-
-	lname,lprob = print_prediction(cough_model,filepath)
-	print("Predicted class:",lname)
-	if lname == "coughing":
-		is_cough = True
-	else:
-		is_cough = False
-
-	count = 0
-	allframes = []
-	allnames = []
-
-	# To save images
-	videoname = videopath.split(os.sep)[-1][:-4]
-	imagepath = os.path.join(dirpath,"images")
-	if not os.path.isdir(imagepath):
-		os.mkdir(imagepath)
-	imagepath = os.path.join(imagepath,videoname)
-	if not os.path.isdir(imagepath):
-		os.mkdir(imagepath)
-
-	vidcap = cv2.VideoCapture(filepath)
-	success,image = vidcap.read()
-	if success:
-		print("video capture successful")
-	fourcc = cv2.VideoWriter_fourcc(*'VP90')
-	video = cv2.VideoWriter(videopath, fourcc, 10.0, (400,300),True)
-	# print("video saved at: ", videopath)
-
-	while success:
-
-		success,frame = vidcap.read()
-		if (not success):
-			break
-		frame = imutils.resize(frame, width=400)
-		# print("resized frame shape:",frame.shape)
-		(locs, preds, faces) = detect_and_predict_mask(frame, faceNet, maskNet)
-		if (locs == -1) and (preds == -1):
-			continue
-
-		for (box, pred) in zip(locs, preds):
-
-			(startX, startY, endX, endY) = box
-			(mask, withoutMask) = pred
-			label = "Mask" if mask > withoutMask else "No Mask"
-
-			if mask>0.70 or withoutMask>0.70:
-				#sort into risk categories
-				if is_cough:
-					if label == 'Mask':
-						label = "Moderate Risk"
-						color = (255, 0, 0) #Blue
-					else:
-						label = "High Risk"
-						color = (0, 0, 225) #Red
-				else:
-					if label == 'Mask':
-						label = "Low Risk"
-						color = (0, 225, 0) #Green
-					else:
-						label = "Moderate Risk"
-						color = (255, 0, 0) #Blue
-				# include the probability in the label
-				# label = "{} ({:.1f}%)".format(label, max(mask, withoutMask) * 100)
-				# display the label and bounding box rectangle on the output frame
-				cv2.putText(frame, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
-				cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
-
-			else:
-				continue
-
-		if faces < 5:
-			allframes.append(frame)
-			video.write(frame)
-			# show the output frame
-			# cv2.imshow("Frame", frame)
-			key = cv2.waitKey(1) & 0xFF
-
-			imagename = str(count)+".jpg"
-			imagesavepath = os.path.join(imagepath,imagename)
-			allnames.append(imagename)
-			cv2.imwrite(imagesavepath,frame)
-			count = count + 1
-			# print("Final image path: ",imagesavepath)
-			sendimage = '/'.join(imagesavepath.split(os.sep)[-4:])
-			socket.emit("response_back",url_for('static',filename = sendimage))
-
-	video.release()
-	# do a bit of cleanup
-	cv2.destroyAllWindows()
-	return allnames
 
 ##--------------------------------------------------------------------------------------------------------
-##Cough Detection functions
+## Cough Detection functions
 ##--------------------------------------------------------------------------------------------------------
+
+def init_cough_mask():
+		#load cough detector model
+
+		modelfolder = os.path.join(os.getcwd(),"model_6b")
+		modelfjson = os.path.join(modelfolder,"model_6b.json")
+		json_file = open(modelfjson, 'r')
+		loaded_model_json = json_file.read()
+		json_file.close()
+		model = model_from_json(loaded_model_json)
+		# load weights into new model
+		model.load_weights(os.path.join(modelfolder,"model_6b.h5"))
+		print("Loaded cough model from disk")
+		return model
 
 def extract_features(file_name):
 
     audio, sample_rate = librosa.load(file_name)
-    # print("Audio File Loaded")
     mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
     mfccs = mfccs[:40,:216]
 
@@ -205,12 +119,9 @@ def extract_features(file_name):
 def print_prediction(model,file_name):
 
     prediction_feature = extract_features(file_name)
-    # print("Features Extracted")
     prediction_feature = librosa.util.fix_length(prediction_feature, 216)
     prediction_feature = prediction_feature.reshape(1, 40, 216, 1)
     predicted_vector = model.predict_classes(prediction_feature)
-
-
 
     labelid = np.int16(predicted_vector[0]).item()
     labelname = getLabel(labelid)
@@ -220,10 +131,9 @@ def print_prediction(model,file_name):
     predicted_proba = predicted_proba_vector[0]
     for i in range(len(predicted_proba)):
         category = getLabel(i)
-        #print(category, "\t\t : ", format(predicted_proba[i], '.32f') )
+
         if (i) == labelid:
             probability = round(predicted_proba[i],2)
-            #print(category," : ",probability)
 
     return labelname,probability
 

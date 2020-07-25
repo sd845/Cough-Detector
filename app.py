@@ -4,16 +4,13 @@ from flask_socketio  import SocketIO
 import base64
 import os
 # Importing from external python file
-from face_mask import init_face_mask,check_mask
-
-#Threading
-from threading import Thread
-import time
+from face_mask import init_cough_mask,print_prediction
+from makeup_artist import Makeup_artist
+from camera import Camera
 
 #Remove logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import logging
-
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
@@ -21,42 +18,23 @@ log.setLevel(logging.ERROR)
 import warnings
 warnings.filterwarnings("ignore")
 import shutil
-#Threading fundamentals
-async_mode = None
-
-if async_mode is None:
-    try:
-        import eventlet
-        async_mode = 'eventlet'
-    except ImportError:
-        pass
-
-    if async_mode is None:
-        try:
-            from gevent import monkey
-            async_mode = 'gevent'
-        except ImportError:
-            pass
-
-    if async_mode is None:
-        async_mode = 'threading'
-
-    print('async_mode is ' + async_mode)
 
 # Creating flask app and initialize the socket
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 
 # Socket
-socket = SocketIO(app, cors_allowed_origins="*", ping_interval=60000, ping_timeout=120000, async_mode=async_mode)
+socket = SocketIO(app, cors_allowed_origins="*", ping_interval=60000, ping_timeout=120000,async_mode = "threading")
 
-#Variable to create filenames
+#Global Variables
 count = "0"
-
-# Dictionary to hold the video files
-converted_videos = {}
+icount = "0"
+lname = "breathing"
+dirpath =""
 #Load the models
-cough_model,faceNet,maskNet = init_face_mask()
+cough_model = init_cough_mask()
+
+camera = Camera(Makeup_artist())
 
 # Load the html page as homepage
 @app.route('/', methods=['GET'])
@@ -67,9 +45,12 @@ def index():
 # Return message on successful connection
 @socket.on('connect')
 def connection():
-    global converted_videos
+    global dirpath
     currentSocketId = request.sid
-    converted_videos[currentSocketId] = []
+    folder = os.path.join(os.getcwd(),"static")
+    dirpath = os.path.join(folder,currentSocketId)
+    if not os.path.isdir(dirpath):
+        os.mkdir(dirpath)
     print ("Connected with: ",currentSocketId)
     socket.emit('message', 'connected established')
 
@@ -78,27 +59,18 @@ def connection():
 @socket.on('blob_event')
 def handle_blob(message):
     global count
-    global converted_videos
+    global lname
+    global dirpath
     currentSocketId = request.sid
-    # print('Got message from frontend :',message[:10])
-    # print("socket id: ",currentSocketId)
 
     #Declaring filename and videoname)
     filename = "video" + count + ".webm"
-    videoname = "vid" + count + ".webm"
-    folder = os.path.join(os.getcwd(),"static")
-    dirpath = os.path.join(folder,currentSocketId)
-    if not os.path.isdir(dirpath):
-        os.mkdir(dirpath)
+
+
     filepath = os.path.join(dirpath,filename)
-    videopath = os.path.join(dirpath,videoname)
-    # type(converted_videos[currentSocketId])
-    converted_videos[currentSocketId].append(videoname)
-    # print("Dict: ",converted_videos)
-    # print("Current videos: ",converted_videos[currentSocketId])
-    #decode the message
-    bstring = message
-    data = base64.b64decode(bstring)
+
+
+    data = base64.b64decode(message)
 
     #write the videofile to disk
     f = open(filepath, 'wb')
@@ -106,29 +78,56 @@ def handle_blob(message):
     f.close()
 
     #Updating information
-
     count = str(int(count)+1)
-    print ("Processing now: ", videopath)
+    print ("Processing now: ", filepath)
 
-    #function for audio and video processing
-    frames = check_mask(socket,filepath,dirpath,cough_model,faceNet,maskNet,videopath)
+    #function for audio processing
+
+    lname,lprob = print_prediction(cough_model,filepath)
+    print("Predicted class:",lname)
+    socket.emit('label_event',{"label":lname,"prob":str(lprob)})
     os.remove(filepath)
-    # print ("Sending rm3 now ");
-    # socket.emit("rmessage3",{"message":url_for('static',filename = currentSocketId+"/"+videoname)})
-    # print("sent video for: ",filename)
-""" if videoname == converted_videos[currentSocketId][0]:
-        socket.emit("rmessage3",{"message":url_for('static',filename = currentSocketId+"/"+videoname)})
-        print("sent video for: ",filename)
-        print("Popped video:",converted_videos[currentSocketId].pop(0))
-        print("Remaining videos:",converted_videos[currentSocketId])
-    else:
-        time.sleep(1)"""
 
-    # folder = os.join.path(os.getcwd(),"static")
-    # dirpath = os.join.path(folder,socketid)
-    # shutil.rmtree(dirpath)
-    # converted_videos.pop(socketid)
 
+@socket.on('input_image')
+def test_message(image):
+    global icount
+    global lname
+    global dirpath
+    # Saving image
+    image = image.split(",")[1]
+    iname = icount + ".jpg"
+    currentSocketId = request.sid
+
+    # Creating folder to save images
+    ipath = os.path.join(dirpath,"images")
+    if not os.path.isdir(ipath):
+        os.mkdir(ipath)
+    ipath = os.path.join(ipath,iname)
+    # Saving image
+    with open(ipath, "wb") as f:
+        f.write(base64.b64decode(image))
+
+    # Send image for processing
+    camera.enqueue_input(ipath,lname)
+    icount = str(int(icount)+1)
+
+    imagepath = os.path.join(currentSocketId,"images")
+    imagepath = os.path.join(imagepath,iname)
+
+    frame = camera.get_frame()
+
+    # Response with the processed image
+    print("Sending image")
+    socket.emit("response_back",url_for("static",filename = imagepath))
+
+
+@socket.on('disconnect')
+def disconnect_function():
+    global dirpath
+    shutil.rmtree(dirpath)
+    print("Disconnected the socket: ")
+    socket.emit("Manual Disconnect")
 
 if __name__ == '__main__':
     print ("socket listening on 9000")
