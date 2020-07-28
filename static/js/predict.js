@@ -166,7 +166,8 @@ window.onload = function(){
             record.disabled = true;
             record.style.backgroundColor = " is no sleep function like that in JavaSgrey"
             stopRecord.disabled=false;
-            
+
+            socket.emit('started', "Started Feed");
             rec.start();
 
           }
@@ -186,6 +187,8 @@ window.onload = function(){
             record.disabled = false;
             stopRecord.disabled=true;
             record.style.backgroundColor = "white"
+
+            socket.emit('stopped', "Stopped Feed");
             rec.stop();
 
           }

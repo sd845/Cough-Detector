@@ -110,11 +110,11 @@ def init_cough_mask():
 
 def extract_features(file_name):
 
-    audio, sample_rate = librosa.load(file_name)
-    mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
-    mfccs = mfccs[:40,:216]
+	audio, sample_rate = librosa.load(file_name)
+	mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
+	mfccs = mfccs[:40,:216]
 
-    return mfccs
+	return mfccs
 
 def print_prediction(model,file_name):
 

@@ -5,9 +5,9 @@ import base64
 import os
 # Importing from external python file
 from face_mask import init_cough_mask,print_prediction
-from makeup_artist import Makeup_artist
-from camera import Camera
-
+from check_mask import Check_Mask
+from capture import Capture
+from check_mask import mask_count,re_init
 #Remove logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import logging
@@ -31,10 +31,19 @@ count = "0"
 icount = "0"
 lname = "breathing"
 dirpath =""
+Hrisk = 0
+Mrisk = 0
+Lrisk = 0
 #Load the models
 cough_model = init_cough_mask()
 
-camera = Camera(Makeup_artist())
+capture = Capture(Check_Mask())
+
+def re_initialise():
+    global Hrisk,Mrisk,Lrisk
+    Hrisk = 0
+    Mrisk = 0
+    Lrisk = 0
 
 # Load the html page as homepage
 @app.route('/', methods=['GET'])
@@ -45,14 +54,20 @@ def index():
 # Return message on successful connection
 @socket.on('connect')
 def connection():
+    currentSocketId = request.sid
+    print ("Connected with: ",currentSocketId)
+    socket.emit('message', 'connected established')
+
+@socket.on('started')
+def started_feed(message):
+    print(message)
+    re_initialise()
     global dirpath
     currentSocketId = request.sid
     folder = os.path.join(os.getcwd(),"static")
     dirpath = os.path.join(folder,currentSocketId)
     if not os.path.isdir(dirpath):
         os.mkdir(dirpath)
-    print ("Connected with: ",currentSocketId)
-    socket.emit('message', 'connected established')
 
 
 #Receive the blob and process it
@@ -73,9 +88,13 @@ def handle_blob(message):
     data = base64.b64decode(message)
 
     #write the videofile to disk
-    f = open(filepath, 'wb')
-    f.write(data)
-    f.close()
+    try:
+        f = open(filepath, 'wb')
+        f.write(data)
+        f.close()
+    except:
+        # print("Stoppped feed")
+        return
 
     #Updating information
     count = str(int(count)+1)
@@ -86,14 +105,13 @@ def handle_blob(message):
     lname,lprob = print_prediction(cough_model,filepath)
     print("Predicted class:",lname)
     socket.emit('label_event',{"label":lname,"prob":str(lprob)})
-    os.remove(filepath)
+    # os.remove(filepath)
 
 
 @socket.on('input_image')
 def test_message(image):
-    global icount
-    global lname
-    global dirpath
+    global icount,lname,dirpath,Hrisk,Lrisk,Mrisk
+
     # Saving image
     image = image.split(",")[1]
     iname = icount + ".jpg"
@@ -109,17 +127,31 @@ def test_message(image):
         f.write(base64.b64decode(image))
 
     # Send image for processing
-    camera.enqueue_input(ipath,lname)
+    capture.enqueue_input(ipath,lname)
     icount = str(int(icount)+1)
 
     imagepath = os.path.join(currentSocketId,"images")
     imagepath = os.path.join(imagepath,iname)
 
-    frame = camera.get_frame()
+    frame = capture.get_frame()
 
     # Response with the processed image
     print("Sending image")
     socket.emit("response_back",url_for("static",filename = imagepath))
+    if int(icount) % 5 ==0:
+        hrisk,mrisk,lrisk = mask_count()
+        re_init()
+        Hrisk += hrisk
+        Lrisk += lrisk
+        Mrisk += mrisk
+        print("High Risk: ",Hrisk,"Moderate Risk: ",Mrisk,"Low Risk: ",Lrisk)
+        socket.emit('stopped',{"High Risk": Hrisk,"Moderate Risk":Mrisk,"Low Risk":Lrisk})
+
+@socket.on('stopped')
+def stopped_function(message):
+    print(message)
+    global dirpath
+    shutil.rmtree(dirpath)
 
 
 @socket.on('disconnect')
