@@ -48,13 +48,16 @@
 <script src="{{ url_for('static',filename='js/predict.js') }}"></script>
 <script type="text/javascript" charset="utf-8">
 
-  var socket = io("http://localhost:9000/");
-
+  var socket = io("http://localhost:8000/");
+  var isConnected = false
   socket.on('connect',function(){
+    isConnected = true
     console.log("connected")
   });
 
+
   socket.on('disconnect',function(e){
+    isConnected = false
     console.log("disconnected ", e)
   });
 

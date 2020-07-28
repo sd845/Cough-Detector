@@ -136,7 +136,7 @@ def test_message(image):
     frame = capture.get_frame()
 
     # Response with the processed image
-    print("Sending image")
+    # print("Sending image")
     socket.emit("response_back",url_for("static",filename = imagepath))
     if int(icount) % 5 ==0:
         hrisk,mrisk,lrisk = mask_count()
@@ -152,15 +152,21 @@ def stopped_function(message):
     print(message)
     global dirpath
     shutil.rmtree(dirpath)
-
+"""
+@socket.on('disconnect')
+def test_disconnect():
+    print('Client disconnected')"""
 
 @socket.on('disconnect')
 def disconnect_function():
-    global dirpath
-    shutil.rmtree(dirpath)
+    try:
+        global dirpath
+        shutil.rmtree(dirpath)
+    except:
+        pass
     print("Disconnected the socket: ")
     socket.emit("Manual Disconnect")
 
 if __name__ == '__main__':
-    print ("socket listening on 9000")
-    socket.run(app, port = 9000)
+    print ("socket listening on 8000")
+    socket.run(app, port = 8000)

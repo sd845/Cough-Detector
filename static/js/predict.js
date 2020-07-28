@@ -72,8 +72,10 @@ window.onload = function(){
           //Create blob of the new audio
           let blob = new Blob(totalaudio);
           //Send blob to the backend
-          sendData(blob)
-
+          if(isConnected == true){
+            console.log(isConnected)
+            sendData(blob)
+          }
         }
 
         //Interval function to interrupt the recording every 5 seconds.
@@ -166,9 +168,14 @@ window.onload = function(){
             record.disabled = true;
             record.style.backgroundColor = " is no sleep function like that in JavaSgrey"
             stopRecord.disabled=false;
-
+            if(isConnected == true){
             socket.emit('started', "Started Feed");
             rec.start();
+            }
+            else {
+             console.log("Server not connected")
+            }
+
 
           }
 
