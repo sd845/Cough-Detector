@@ -137,7 +137,7 @@ window.onload = function(){
             message : "You Coughed!",
             } });
 
-          if ((label === "coughing")&&(prob >= 0.90)){
+          if (label === "coughing"){
               pred.dispatchEvent(event);
               }
           else{

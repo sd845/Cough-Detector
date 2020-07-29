@@ -135,6 +135,9 @@ def test_message(image):
 
     frame = capture.get_frame()
 
+    if os.sep == '\\':
+        imagepath = imagepath.replace('\\','/')
+
     # Response with the processed image
     # print("Sending image")
     socket.emit("response_back",url_for("static",filename = imagepath))
