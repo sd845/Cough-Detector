@@ -1,5 +1,5 @@
 # Importing major libraries
-from flask import Flask, render_template, url_for,request
+from flask import Flask, render_template, url_for,request, jsonify
 from flask_socketio  import SocketIO
 import base64
 import os
@@ -19,9 +19,14 @@ import warnings
 warnings.filterwarnings("ignore")
 import shutil
 
+def page_not_found(e):
+    print('Not found')
+    return render_template('404.html'), 404
+
 # Creating flask app and initialize the socket
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
+app.register_error_handler(404, page_not_found)
 
 # Socket
 socket = SocketIO(app, cors_allowed_origins="*", ping_interval=60000, ping_timeout=120000,async_mode = "threading")
@@ -39,6 +44,8 @@ cough_model = init_cough_mask()
 
 capture = Capture(Check_Mask())
 
+
+
 def re_initialise():
     global Hrisk,Mrisk,Lrisk
     Hrisk = 0
@@ -50,6 +57,12 @@ def re_initialise():
 def index():
     # Main page
     return render_template('index.html')
+
+"""# Load the html page as homepage
+@app.route('/robots933456.txt', methods=['GET'])
+def reply():
+    # Main page
+    return """
 
 # Return message on successful connection
 @socket.on('connect')
