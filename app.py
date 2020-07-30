@@ -29,7 +29,7 @@ app.config['SECRET_KEY'] = 'secret!'
 app.register_error_handler(404, page_not_found)
 
 # Socket
-socket = SocketIO(app, cors_allowed_origins="*",async_mode = "threading")
+socket = SocketIO(app, cors_allowed_origins="*",ping_interval=60000, ping_timeout=120000, async_mode = "threading")
 
 #Global Variables
 count = "0"
@@ -130,9 +130,11 @@ def test_message(image):
     image = image.split(",")[1]
     iname = icount + ".jpg"
     currentSocketId = request.sid
-
+    if not os.path.isdir(dirpath):
+        os.mkdir(dirpath)
     # Creating folder to save images
     ipath = os.path.join(dirpath,"images")
+
     if not os.path.isdir(ipath):
         os.mkdir(ipath)
     ipath = os.path.join(ipath,iname)
