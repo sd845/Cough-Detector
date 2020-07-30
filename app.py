@@ -9,7 +9,7 @@ from check_mask import Check_Mask
 from capture import Capture
 from check_mask import mask_count,re_init
 #Remove logging
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -29,7 +29,7 @@ app.config['SECRET_KEY'] = 'secret!'
 app.register_error_handler(404, page_not_found)
 
 # Socket
-socket = SocketIO(app, cors_allowed_origins="*", ping_interval=60000, ping_timeout=120000,async_mode = "threading")
+socket = SocketIO(app, cors_allowed_origins="*",async_mode = "threading")
 
 #Global Variables
 count = "0"
@@ -81,6 +81,7 @@ def started_feed(message):
     dirpath = os.path.join(folder,currentSocketId)
     if not os.path.isdir(dirpath):
         os.mkdir(dirpath)
+    print(dirpath)
 
 
 #Receive the blob and process it
@@ -168,10 +169,7 @@ def stopped_function(message):
     print(message)
     global dirpath
     shutil.rmtree(dirpath)
-"""
-@socket.on('disconnect')
-def test_disconnect():
-    print('Client disconnected')"""
+    print("In Stop: ",dirpath)
 
 @socket.on('disconnect')
 def disconnect_function():
@@ -183,6 +181,12 @@ def disconnect_function():
     print("Disconnected the socket: ")
     socket.emit("Manual Disconnect")
 
+@socket.on('uncaughtException')
+def exceptiony():
+    # handle or ignore error
+    console.log(exception);
+
+
 if __name__ == '__main__':
     print ("socket listening on 8000")
-    socket.run(app, port = 8000)
+    socket.run(app, port = 8000, host='0.0.0.0')

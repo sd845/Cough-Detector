@@ -6,6 +6,8 @@ import imutils
 import cv2
 import os
 import librosa
+import tensorflow
+tensorflow.get_logger().setLevel('INFO')
 
 ##--------------------------------------------------------------------------------------------------------
 ## Mask Detection functions
