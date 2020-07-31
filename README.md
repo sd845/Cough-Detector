@@ -1,10 +1,13 @@
 ### Problem Statement
-Using real time audio stream collected over a microphone, we aim to classify sound as cough and not cough. 
+To monitor the presence of face masks and detect coughs in real time and classify individuals into varying risk categories. 
+
 #### Built With
 * Flask
+* Flask-SocketIO
 * Librosa
 * Keras
 * Tensorflow
+* OpenCV
 * Media Recorder API
 * Bootstrap 4
 
@@ -13,7 +16,7 @@ Using real time audio stream collected over a microphone, we aim to classify sou
 
 #### Troubleshooting
 * In case the trigger doesn't appear at all, it is advised to open the link in the incognito mode.
-* Latency : Latency depends on the GPU of the system on which  you are running the web application. For best results, A high performing GPU is required.
+* Latency: latency depends on the GPU of the system on which  you are running the web application. For best results, A high performing GPU is required.
 
 #### Training Datasets
 * [ESC-50](https://github.com/karolpiczak/ESC-50)
@@ -43,7 +46,12 @@ The following package versions must be installed to successfully deploy the mode
 * numba 0.49.1
 * tensorflow 2.1.0
 * python 3.7.1
-
+* flask-socketio 4.3.1
+* imutils 0.5.3
+* opencv-python 4.3.0.36
+* six 1.12.0
+* scipy 1.4.1
+* setuptools 41.0.0
 
 To run the model on your <b>local machine</b>, you can download this repository as a zip file, clone or pull it by using the command
 ```
@@ -63,15 +71,12 @@ Then, navigate to the project folder and execute the command
 $ python app.py
 ```
 
-
 to deploy the app locally. 
 
-On your web browser go to <a href="http://localhost:5000/" target="_blank">http://localhost:5000/</a>
-
+On your web browser go to <a href="http://localhost:8000/" target="_blank">http://localhost:8000/</a>
 
 #### Contributers
 * Aparna Ranjith
-* Arshiya Aggarwal
 * Gunveen Batra
 * Mansi Parashar
 * Mitali Sheth 
